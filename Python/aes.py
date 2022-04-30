@@ -20,10 +20,10 @@ class AES:
 
         for block in blocks:
             self._addRoundKey(roundKeys[0], block)
-            # print("Before", block)
-            # print(self._subBytes(block))
-            print(self._shiftRows(block))
-
+            self._subBytes(block)
+            self._shiftRows(block)
+            self._mixColumns(block)
+            exit()
             # for each in range(8):
         #         self._subBytes(block)
         #         self._shiftRows(block)
@@ -207,17 +207,69 @@ class AES:
         """
         * Function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
         """
-        # print(block[:4])
-        # print(block[4:8])
-        # print(block[8:12])
-        # print(block[12:16])
-        return 
+        block = [
+            block[0], block[5], block[10], block[15], 
+            block[4], block[9], block[14], block[3],
+            block[8], block[13], block[2], block[7],
+            block[12], block[1], block[6], block[11]
+        ]
+        return block
 
     def _mixColumns(self, block) -> list:
         """
         * Function consists of multiplying each column of the block with a constant matrix as follows:
+        ! Function work in progress
         """
-        return 
+        #? Input 4 bytes i.e newly formed after shiftRow 0, 1, 2, 3
+        const = [
+            0x02, 0x03, 0x01, 0x01,
+            0x01, 0x02, 0x03, 0x01,
+            0x01, 0x01, 0x02, 0x03, 
+            0x01, 0x01, 0x01, 0x02
+        ]
+        print(block)
+        counter = x = y = 0
+        temp = [0, 1, 2, 3]
+        while counter < len(block):
+            multiplication = []
+            for each in range(0, len(block), 4):
+                # print(counter, x, y)            
+                y = 0 if  y >= 15 else y+1
+                # x = if counter < 3 else x+1
+                print(each)
+            print("=====")
+            exit()
+            counter +=1
+        
+        # block = [
+        #     block[0], block[5], block[10], block[15], 
+        #     block[4], block[9], block[14], block[3],
+        #     block[8], block[13], block[2], block[7],
+        #     block[12], block[1], block[6], block[11]
+        # ]
+
+        return block
+    
+    def _calcMixColumn(self, bytes1, bytes2):
+        """
+        * Functions takes two subarray, performs Galois Field Multiplication, then return a result value
+        ! Function has a bug
+        """
+        # GF(2^m) mod p(x) -> Multiplication is done between two coefficients (byte1 & byte2) Overflow is modularated using byte1
+        result = hex(int(bytes1, 16) * 2) if bytes2 > 0x01 else hex(int(bytes1, 16) * bytes2)
+        if len(result) > 4: #Overflow mod
+            result = hex(int(result, 16) ^ int(bytes1, 16))
+            if bytes2 == 0x03:
+                result = hex(int(result, 16) ^ int(bytes1, 16))
+            result = result[:2] + result[3:] # Dropping overflow
+
+        elif len(result) < 4:
+            result = self._patchHex(result)
+
+        # Mulitiplication using 0x03 is always modular self(bytes1)
+        if len(result) == 4 and bytes2 == 0x03:
+                result = hex(int(result, 16) ^ int(bytes1, 16))
+        return result
 
     def _Reassemble(self, blocks) -> str:
         """ 
@@ -264,4 +316,4 @@ def main():
     aes.encrypt(plaintext, key)
     # aes.encrypt("hello", "word")
     # aes._invCipher()
-main()
+# main()
