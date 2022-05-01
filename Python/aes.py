@@ -214,11 +214,37 @@ class AES:
             block[12], block[1], block[6], block[11]
         ]
         return block
+    
+    def _mixColumnsAdd(self, subarray):
+        """
+        * Function takes a subarray of hex values, performs GF(2^m) addition then return a result value
+        """
+        return hex(int(subarray[0], 16) ^ int(subarray[1], 16) ^ int(subarray[2], 16) ^ int(subarray[3], 16))
 
+    def _mixColumnsMult(self, bytes1, const):
+        """
+        * Function takes two bytes (bytes1 & const), performs Galois Field Multiplication, then return a result value
+        """
+        # GF(2^m) mod p(x) -> Multiplication is done between two coefficients (byte1 & byte2) Overflow is modularated using byte1
+        result = hex(int(bytes1, 16) * 2) if const > 0x01 else hex(int(bytes1, 16) * const)
+        if len(result) > 4: # Overflow reduction using irrreducible polynomial 0x1b
+            result = hex(int(result, 16) ^ 0x1b)
+            if const == 0x03:
+                result = hex(int(result, 16) ^ int(bytes1, 16))
+            return result[:2] + result[3:] # Dropping overflow
+
+        if len(result) < 4:
+            result = self._patchHex(result)
+
+        # Mulitiplication with 0x03 is always modular self
+        if len(result) == 4 and const > 0x02:
+                result = hex(int(result, 16) ^ int(bytes1, 16))
+        return result
+    
     def _mixColumns(self, block) -> list:
         """
         * Function consists of multiplying each column of the block with a constant matrix as follows:
-        ! Function work in progress
+        TODO: Function work in progress
         """
         #? Input 4 bytes i.e newly formed after shiftRow 0, 1, 2, 3
         const = [
@@ -229,18 +255,22 @@ class AES:
         ]
         print(block)
         counter = x = y = 0
-        temp = [0, 1, 2, 3]
+        temp = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]
         while counter < len(block):
             multiplication = []
             for each in range(0, len(block), 4):
                 # print(counter, x, y)            
                 y = 0 if  y >= 15 else y+1
                 # x = if counter < 3 else x+1
-                print(each)
-            print("=====")
-            exit()
+                # print(each)
+            # print("=====")
+            # exit()
             counter +=1
-        
+        temp = [self._mixColumnsMult(x, y) for x, y in zip(block[:4], const[:4])]
+        print(const[:4])
+        print(block[:4])
+        print(temp)
+        self._mixColumnsAdd(temp)
         # block = [
         #     block[0], block[5], block[10], block[15], 
         #     block[4], block[9], block[14], block[3],
@@ -248,32 +278,10 @@ class AES:
         #     block[12], block[1], block[6], block[11]
         # ]
 
-        return block
-    
-    def _calcMixColumn(self, bytes1, bytes2):
-        """
-        * Functions takes two subarray, performs Galois Field Multiplication, then return a result value
-        ! Function has a bug
-        """
-        # GF(2^m) mod p(x) -> Multiplication is done between two coefficients (byte1 & byte2) Overflow is modularated using byte1
-        result = hex(int(bytes1, 16) * 2) if bytes2 > 0x01 else hex(int(bytes1, 16) * bytes2)
-        if len(result) > 4: #Overflow mod
-            result = hex(int(result, 16) ^ int(bytes1, 16))
-            if bytes2 == 0x03:
-                result = hex(int(result, 16) ^ int(bytes1, 16))
-            result = result[:2] + result[3:] # Dropping overflow
-
-        elif len(result) < 4:
-            result = self._patchHex(result)
-
-        # Mulitiplication using 0x03 is always modular self(bytes1)
-        if len(result) == 4 and bytes2 == 0x03:
-                result = hex(int(result, 16) ^ int(bytes1, 16))
-        return result
 
     def _Reassemble(self, blocks) -> str:
         """ 
-        * Functons must perform the concantination of blocks of 128bit (16 bytes) into a string of ciphertext
+        * Function performs the ciphertext concatenation from blocks of 128bit (16 bytes)
         """
         return
 

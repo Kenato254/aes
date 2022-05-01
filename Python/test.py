@@ -1,6 +1,4 @@
-import json
 import unittest
-from unittest import result
 from aes import AES
 
 class TestAES(unittest.TestCase):
@@ -119,17 +117,27 @@ class TestAES(unittest.TestCase):
         ]
         # result = self.test._mixColumns(testData)
         # self.assertListEqual(result, ['0x92', '0x6d', '0x87', '0x3b'])
-
-    def test_calcMixColumn_method(self):
+    
+    def test_mixColumnsAdd_method(self):
         """
-        ! Function tests proper working of mixColumn's GF(2^m) Multiplication
+        ! Functon tests proper working of mixColumns' GF(2^m) Addition
+        """
+        testData = [['0x92', '0x76', '0x87', '0x3b'], ['0x45', '0x72', '0xf5', '0x89'], ['0x7f', '0x02', '0xbf', '0x08']]
+        result = ['0x58', '0x4b', '0xca']
+        for i in range(len(testData)):
+            self.assertEqual(self.test._mixColumnsAdd(testData[i]), result[i])
+
+
+    def test_mixColumnsMult_method(self):
+        """
+        ! Function tests proper working of mixColumns' GF(2^m) Multiplication
         """
         const = [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03]]
         data = [['0x49', '0xdb', '0x87', '0x3b'], ['0x45', '0x39', '0x53', '0x89',], ['0x7f', '0x02', '0xd2', '0xf1']]
-        result = [['0x92', '0x6d', '0x87', '0x3b'], ['0x45', '0x72', '0xf5', '0x89'], ['0x7f', '0x02', '0xbf', '0x08']]
+        result = [['0x92', '0x76', '0x87', '0x3b'], ['0x45', '0x72', '0xf5', '0x89'], ['0x7f', '0x02', '0xbf', '0x08']]
         for each in range(len(const)):
             for c, d, r in zip(const[each], data[each], result[each]):
-                self.assertEqual(self.test._calcMixColumn(d, c), r)
+                self.assertEqual(self.test._mixColumnsMult(d, c), r)
 
     def tearDown(self) -> None:
         self.test
