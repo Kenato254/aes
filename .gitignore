@@ -6,9 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
-# VSCode
+# VSCode & Custom extensions
 .vscode/
-.gitignore
+out.py
 
 # Distribution / packaging
 .Python

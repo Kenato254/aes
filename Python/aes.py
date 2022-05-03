@@ -6,39 +6,47 @@ class AES:
         """
         * Nb -> Number of columns comparing the state (128 bit standard is 4)
         * Nk -> Number of 32 bit words comprising the Cipher key (128 bit standard is 4)
-        * Nr -> Number of rounds, which is a function of Nk and Nb (128 bit standard is 4)
+        * Nr -> Number of rounds, which is a function of Nk and Nb (128 bit standard is 10)
         """
-        if blocksize == 128:
-            self.Nk = 4
-            self.Nb = 4
-            self.Nr = 10
+        self.blocksize = blocksize
+
+        if self.blocksize == 128:
+            self.Nk, self.Nb, self.Nr = 4, 4, 10
+        elif self.blocksize == 192:
+            self.Nk, self.Nb, self.Nr = 6, 4, 12
+        elif self.blocksize == 256:
+            self.Nk, self.Nb, self.Nr = 8, 4, 14
     
     def encrypt(self, plaintext, key) -> str:
-        blocks = self._divideIntoBlocks(plaintext)
+        #? Cast input to str and checks key's length
+        assert len(key) in (16, 24, 32, 48, 64), "Warning: Invalid key length."
 
+        key = str(key) if type(key) == int else key #
+        plaintext = str(plaintext) if type(plaintext) == int else plaintext 
+
+        #? First round
+        blocks = self._divideIntoBlocks(plaintext)
         roundKeys = self._getRoundKeys(key) #? Key Expansion
 
+        #? Intermediate rounds
         for block in blocks:
             self._addRoundKey(roundKeys[0], block)
-            self._subBytes(block)
-            self._shiftRows(block)
-            self._mixColumns(block)
-            exit()
-            # for each in range(8):
-        #         self._subBytes(block)
-        #         self._shiftRows(block)
-        #         self._mixColumns(block)
-        #         self._addRoundKey(roundKeys[each], block)
-            
-        #     self._subBytes(block)
-        #     self._shiftRows(block)
-        #     self._mixColumns(block)
-        #     self._addRoundKey(roundKeys[10-1], block) #? For 128-bit key 
 
-        # ciphertext = self._Reassemble(blocks)
-        # return ciphertext
+            for each in range(self.Nr-2):
+                self._subBytes(block)
+                self._shiftRows(block)
+                self._mixColumns(block)
+                self._addRoundKey(roundKeys[each], block)
+        
+        #? Last round            
+        self._subBytes(block)
+        self._shiftRows(block)
+        self._mixColumns(block)
+        self._addRoundKey(roundKeys[self.Nr-1], block) #? For 128-bit key 
+
+        ciphertext = self._Reassemble(blocks)
+        return ciphertext
     
-
     def decrypt(self, ciphertext, key):
         return 
 
@@ -48,87 +56,102 @@ class AES:
         * This function operates on two cases; Case 1: Plaintext < 16 bytes Case 2: Plaintext > 16 bytes
         """
         #? Divide plaintext into block of 4 by 4 bytes or 128 bits.  
-        blocks = []
-        length = len(plaintext) #! length
-        innerBlocks = length // 16
-        padding = 16 - length if length < 16 else length % 16
+        blocks, length = [], len(plaintext) 
 
-        #? Case 1
-        if innerBlocks < 1:
-            # plaintext += " " * padding #? Padding plaintext to achieve 16 characters string
-            #? Padding plaintext to achieve 16 characters string
-            plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
-                        for i in range(padding))
+        if len(plaintext) == 32: #? For hex string inputs
             temp = []
-            for char in plaintext:
-                # temp.append(ord(char))
-                temp.append(hex(ord(char))) #? Hexdecimals
-                # temp.append(hex(ord(char)).lstrip("0x")) #? Hexdecimals
+            for char in range(0, length, 2):
+                temp.append(str("0x"+plaintext[char:char+2]))
             blocks.append(temp)
-            return blocks
-        
-        #? Case 2
-        if padding > 0:
-            # plaintext += " " * padding #? Padding plaintext to achieve 16 characters string
-            #? Padding plaintext to achieve 16 characters string
-            plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
-                        for i in range(padding))
-            innerBlocks = len(plaintext) // 16  
-        
-        index = 0
-        while innerBlocks:
-            temp = []
-            for char in plaintext[index:index+16]:
-                # temp.append(ord(char))
-                temp.append(hex(ord(char))) #? Hexdecimals
-                # temp.append(hex(ord(char)).lstrip("0x")) #? Hexdecimals
 
-            if len(temp) > 0:
+        else: #? For any other character inputs
+            innerBlocks = length // 16
+            padding = 16 - length if length < 16 else length % 16
+
+            #? Case 1
+            if innerBlocks < 1:
+                #? Padding plaintext to achieve 16 characters string
+                plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
+                            for i in range(padding))
+
+                temp = []
+                for char in plaintext:
+                    temp.append(hex(ord(char))) #? Hexdecimals
                 blocks.append(temp)
-                index += 16
-                innerBlocks -=1
+                return blocks
+            
+            #? Case 2
+            if padding > 0:
+                # plaintext += " " * padding #? Padding plaintext to achieve 16 characters string
+                #? Padding plaintext to achieve 16 characters string
+                plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
+                            for i in range(padding))
+                innerBlocks = len(plaintext) // 16  
+            
+            index = 0
+            while innerBlocks:
+                temp = []
+                for char in plaintext[index:index+16]:
+                    temp.append(hex(ord(char))) #? Hexdecimals
 
+                if len(temp) > 0:
+                    blocks.append(temp)
+                    index += 16
+                    innerBlocks -=1
         return blocks
     
-    def _getRoundKeys(self, key) -> None:
+    def _getRoundKeys(self, key) -> list:
         """
         * Functions performs key whitening/ key schedule.The key schedule takes the original 
         * input key (of length 128, 192 or 256 bit) and derives the subkeys used in AES.
         * The number of subkeys is equal to the number rounds plus one, due to the key 
         * needed for key whitening in the first key addition layer. Nr + 1 = 11 subkeys
         """
-
-        if len(key) < 16: #? Padding with random string for 128 bit key encryption
-            padding = ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
-                        for i in range(16 - len(key)))
-            key += padding
-
         word = 4 *[(self.Nr-1)] #?  An array of 4 bytes.
 
-        temp = None
-        i = 0
-        while i < self.Nk:
-            # word[i] = key[4*i] + key[4*i+1] + key[4*i+2] + key[4*i+3] #? First subkey division. Comprising of four words
-            # word[i] = [key[4*i], key[4*i+1], key[4*i+2], key[4*i+3]]
-            # word[i] = [ord(key[4*i]), ord(key[4*i+1]), ord(key[4*i+2]), ord(key[4*i+3])]
-            # word[i] = [hex(ord(key[4*i])), hex(ord(key[4*i+1])), hex(ord(key[4*i+2])), hex(ord(key[4*i+3]))]
+        keyLength = len(key)
 
-            #? First subkey division. Comprising of four words of hexdecimal string
-            word[i] = [hex(ord(key[4*i])), hex(ord(key[4*i+1])), \
-                        hex(ord(key[4*i+2])), hex(ord(key[4*i+3]))]
-            i += 1   
+        if keyLength == 32: #? Handling key of hex string 
+            temp = []
+            for char in range(0, keyLength, 2):
+                temp.append(str("0x"+key[char:char+2]))
+            word = [temp[0:4], temp[4:8], temp[8:12], temp[12:16]]
+        else:    
+            temp = None
+            i = 0
+            while i < self.Nk:
+                #? First subkey division. Comprising of four words of hexdecimal string
+                word[i] = [hex(ord(key[4*i])), hex(ord(key[4*i+1])), \
+                            hex(ord(key[4*i+2])), hex(ord(key[4*i+3]))]
+                i += 1   
         i = self.Nk
 
         while i < self.Nb * (self.Nr+1):
             temp = word[i-1]
             if i % self.Nk == 0:
-                temp = self._rCon(self._subWord(self._rotWord(temp)), i//self.Nk)
+                temp = self._rCon(self._subWord(self._rotWord(temp)), self._RCON[i//self.Nk])
 
             elif self.Nk > 6 and i % self.Nk == 4:
                 temp = self._subWord(temp)
-
+            
             word.append(self._aXorB(word[i-self.Nk], temp))
             i +=1
+        #? Reassemble Word to keys
+        word = self._reassembleWord(word)
+        return word
+
+    def _reassembleWord(self, word):
+        """
+        * Function takes word array and returns 16 bytes keys
+        """
+        temp, temp2 = [], []
+        for each in range(len(word)):
+            temp2.extend(word[each])
+            if len(temp2) == 16:
+                temp.append(temp2)
+                temp2 = []
+        word = temp[0:-1]
+        del temp, temp2
         return word
         
     def _subWord(self, word) -> list:
@@ -195,7 +218,7 @@ class AES:
             block[k] = result
         return block
 
-    def _subBytes(self, block):
+    def _subBytes(self, block) -> list:
         """
         * Functions takes an array of bytes then perform substitution: each byte in the block is replaced by 
         * the corresponding element from the fixed table (S-box).
@@ -251,42 +274,54 @@ class AES:
             0x02, 0x03, 0x01, 0x01,
             0x01, 0x02, 0x03, 0x01,
             0x01, 0x01, 0x02, 0x03, 
-            0x01, 0x01, 0x01, 0x02
+            0x03, 0x01, 0x01, 0x02
         ]
-        print(block)
-        counter = x = y = 0
-        temp = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]
-        while counter < len(block):
-            multiplication = []
-            for each in range(0, len(block), 4):
-                # print(counter, x, y)            
-                y = 0 if  y >= 15 else y+1
-                # x = if counter < 3 else x+1
-                # print(each)
-            # print("=====")
-            # exit()
-            counter +=1
-        temp = [self._mixColumnsMult(x, y) for x, y in zip(block[:4], const[:4])]
-        print(const[:4])
-        print(block[:4])
-        print(temp)
-        self._mixColumnsAdd(temp)
-        # block = [
-        #     block[0], block[5], block[10], block[15], 
-        #     block[4], block[9], block[14], block[3],
-        #     block[8], block[13], block[2], block[7],
-        #     block[12], block[1], block[6], block[11]
-        # ]
+        c = 0
+        mixed = []
+        for each in range(4, len(const)+1, 4):
+            start = to = None
+            for x in range(each-4, each):
+                for _ in range(each, each+1):
+                    start, to = each-4, each
+                if x % 4 == 0:
+                    c = 0
+                mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
+                c +=4
+        return mixed
 
-
-    def _Reassemble(self, blocks) -> str:
+    def _Reassemble(self, block) -> str:
         """ 
         * Function performs the ciphertext concatenation from blocks of 128bit (16 bytes)
         """
-        return
+        ciphertext = ""
+        for each in block:
+            for char in each:
+                ciphertext += "".join(char.split('0x'))
+        return ciphertext
 
-    def _invCipher(self):
-        pass
+    def decrypt(self, state, key):
+        """
+        * Function start the reverse encryption process.
+        """
+        #? Starts with Final round of encryption
+        state = self._divideIntoBlocks(state)
+        roundKeys = self._getRoundKeys(key)            
+        print(roundKeys)
+
+        self._addRoundKey(roundKeys[self.Nr-1], state) #? For 128-bit key 
+        self._invShiftRows(state)
+        self._invSubBytes(state)
+
+        #? Intermediate rounds
+        for each in range(self.Nr-2, 0, -1):
+            self._addRoundKey(roundKeys[each], state)
+            self._invMixColumns(state)
+            self._invShiftRows(state)
+            self._invSubBytes(state)
+
+        #? Finishes with First round of encryption
+        self._addRoundKey(roundKeys[0], state)   
+        return state
 
     def _invSubBytes(self, state):
         pass
@@ -317,11 +352,41 @@ class AES:
         [0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]
     ]
 
-def main():
-    aes = AES()
-    plaintext = "Function consists of multiplying each column of the block with a constant matrix as follow"
-    key = "opyrightSpringer"
-    aes.encrypt(plaintext, key)
-    # aes.encrypt("hello", "word")
-    # aes._invCipher()
-# main()
+    _RCON = [
+        0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 
+        0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 
+        0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 
+        0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 
+        0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 
+        0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 
+        0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 
+        0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 
+        0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 
+        0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 
+        0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 
+        0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 
+        0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 
+        0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 
+        0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 
+        0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
+    ]
+
+    _invSBox = [
+        [0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
+        [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],
+        [0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e],
+        [0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49, 0x6d, 0x8b, 0xd1, 0x25],
+        [0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc, 0x5d, 0x65, 0xb6, 0x92],
+        [0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57, 0xa7, 0x8d, 0x9d, 0x84],
+        [0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05, 0xb8, 0xb3, 0x45, 0x06],
+        [0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03, 0x01, 0x13, 0x8a, 0x6b],
+        [0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce, 0xf0, 0xb4, 0xe6, 0x73],
+        [0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8, 0x1c, 0x75, 0xdf, 0x6e],
+        [0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e, 0xaa, 0x18, 0xbe, 0x1b],
+        [0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe, 0x78, 0xcd, 0x5a, 0xf4],
+        [0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59, 0x27, 0x80, 0xec, 0x5f],
+        [0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef],
+        [0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61],
+        [0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d]
+    ]
+

@@ -6,9 +6,11 @@ class TestAES(unittest.TestCase):
         self.test = AES()
         return super().setUp()
     
-    # def test_encryption_method(self):
-    #     self.test.encrypt("Hello", "word")
-    
+    # def test_encrypt_method(self):
+    #     """Test AES encryption method """
+    #     cipher = self.test.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f")
+    #     self.assertEqual(cipher, "69c4e0d86a7b0430d8cdb78070b4c55a")
+
     def test_divideIntoBlocks_method(self):
         """
         ! Function tests proper working of AES._divideIntoBlock method
@@ -101,22 +103,6 @@ class TestAES(unittest.TestCase):
 
         result = self.test._shiftRows(bfShift)
         self.assertListEqual(result, afShift)
-
-    def test_mixColumn_method(self):
-        resultList = [
-            '0x58', '0x4d', '0xca', '0xf1', 
-            '0x1b', '0x4b', '0x5a', '0xac',
-            '0xdb', '0xe7', '0xca', '0xa8',
-            '0x1b', '0x6b', '0xb0', '0xe5'
-        ]
-        testData = [
-            '0x49', '0xdb', '0x87', '0x3b', 
-            '0x45', '0x39', '0x53', '0x89',
-            '0x7f', '0x02', '0xd2', '0xf1',
-            '0x77', '0xde', '0x96', '0x1a'
-        ]
-        # result = self.test._mixColumns(testData)
-        # self.assertListEqual(result, ['0x92', '0x6d', '0x87', '0x3b'])
     
     def test_mixColumnsAdd_method(self):
         """
@@ -126,7 +112,6 @@ class TestAES(unittest.TestCase):
         result = ['0x58', '0x4b', '0xca']
         for i in range(len(testData)):
             self.assertEqual(self.test._mixColumnsAdd(testData[i]), result[i])
-
 
     def test_mixColumnsMult_method(self):
         """
@@ -138,6 +123,22 @@ class TestAES(unittest.TestCase):
         for each in range(len(const)):
             for c, d, r in zip(const[each], data[each], result[each]):
                 self.assertEqual(self.test._mixColumnsMult(d, c), r)
+
+    def test_mixColumn_method(self):
+        testData = [
+            '0x49', '0xdb', '0x87', '0x3b', 
+            '0x45', '0x39', '0x53', '0x89',
+            '0x7f', '0x02', '0xd2', '0xf1',
+            '0x77', '0xde', '0x96', '0x1a'
+        ]
+        resultList = [
+            '0x58', '0x4d', '0xca', '0xf1', 
+            '0x1b', '0x4b', '0x5a', '0xac',
+            '0xdb', '0xe7', '0xca', '0xa8',
+            '0x1b', '0x6b', '0xb0', '0xe5'
+        ]
+        result = self.test._mixColumns(testData)
+        self.assertListEqual(result, resultList)
 
     def tearDown(self) -> None:
         self.test
