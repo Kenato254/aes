@@ -1,5 +1,6 @@
 import secrets
 import string
+from time import sleep
 
 class AES:
     def __init__(self, blocksize=128) -> None:
@@ -27,17 +28,24 @@ class AES:
         #? First round
         blocks = self._divideIntoBlocks(plaintext)
         roundKeys = self._getRoundKeys(key) #? Key Expansion
+        
+        # TODO:
+        # print(len(roundKeys))
+        # for e in roundKeys:
+        #     print(e)
+        # exit()
 
         #? Intermediate rounds
-        for block in blocks:
-            self._addRoundKey(roundKeys[0], block)
-
+        for block in blocks:    
+            self._addRoundKey(roundKeys[0], block)    
             for each in range(self.Nr-2):
                 self._subBytes(block)
                 self._shiftRows(block)
+                # print(self._mixColumns(block))
                 self._mixColumns(block)
+                exit()
                 self._addRoundKey(roundKeys[each], block)
-        
+
         #? Last round            
         self._subBytes(block)
         self._shiftRows(block)
@@ -47,9 +55,6 @@ class AES:
         ciphertext = self._Reassemble(blocks)
         return ciphertext
     
-    def decrypt(self, ciphertext, key):
-        return 
-
     def _divideIntoBlocks(self, plaintext) -> list:
         """ 
         * Functons must perform the division of the input text into blocks of 128bit (16 bytes)
@@ -107,15 +112,20 @@ class AES:
         * The number of subkeys is equal to the number rounds plus one, due to the key 
         * needed for key whitening in the first key addition layer. Nr + 1 = 11 subkeys
         """
-        word = 4 *[(self.Nr-1)] #?  An array of 4 bytes.
+        #?  An array of 4 bytes.
+        word = 4 *[(self.Nr-1)] 
 
+        #? Get key length
         keyLength = len(key)
-
-        if keyLength == 32: #? Handling key of hex string 
+    
+        #? Divide key of hex string  into four words of 4 bytes length
+        if keyLength == 32: 
             temp = []
             for char in range(0, keyLength, 2):
                 temp.append(str("0x"+key[char:char+2]))
-            word = [temp[0:4], temp[4:8], temp[8:12], temp[12:16]]
+            word = [temp[0:4], temp[4:8], temp[8:12], temp[12:16]] #TODO: hARD TYPED tO Be REMOVEd
+        
+        #? Divide key of ascii characters into four words of 4 bytes length and cast into hex string consequently
         else:    
             temp = None
             i = 0
@@ -126,16 +136,19 @@ class AES:
                 i += 1   
         i = self.Nk
 
+        #? Start key expansion loop
         while i < self.Nb * (self.Nr+1):
-            temp = word[i-1]
+            temp = list(word[i-1])
+
             if i % self.Nk == 0:
                 temp = self._rCon(self._subWord(self._rotWord(temp)), self._RCON[i//self.Nk])
 
             elif self.Nk > 6 and i % self.Nk == 4:
                 temp = self._subWord(temp)
-            
+
             word.append(self._aXorB(word[i-self.Nk], temp))
             i +=1
+
         #? Reassemble Word to keys
         word = self._reassembleWord(word)
         return word
@@ -179,11 +192,15 @@ class AES:
         word[0] =  result if len(result) == 4 else self._patchHex(result)
         return word
 
-    def _lookUpHex(self, hexString) -> str:
+    def _lookUpHex(self, hexString, inv=False) -> str:
         """
         * Function maps given hex string to its substitute value on S-Box and then returns it hex string value
         """
-        hexString = hex(self._sBox[int("0x"+hexString[0], 16)][int("0x"+hexString[1], 16)])
+        if inv: #? SBox lookup for Inverse cipher
+            hexString = hex(self._invSBox[int("0x"+hexString[0], 16)][int("0x"+hexString[1], 16)])
+        else: #? SBox lookup for forward encryption   
+            hexString = hex(self._sBox[int("0x"+hexString[0], 16)][int("0x"+hexString[1], 16)])
+        
         if len(hexString) != 4:
             hexString = self._patchHex(hexString)
         return hexString
@@ -212,10 +229,11 @@ class AES:
         * They are achieved by performing standard polynomial addition and substraction.
         """
         for k, v in enumerate(block):
-            result = hex(int(v, 16) ^ int(key[k//4], 16))
+            result = hex(int(v, 16) ^ int(key[k], 16))
             if len(result) != 4:
                 result = self._patchHex(result)
             block[k] = result
+        # print(block) #!!!!!!!!!!!!!!! TODO:
         return block
 
     def _subBytes(self, block) -> list:
@@ -228,7 +246,7 @@ class AES:
 
     def _shiftRows(self, block) -> list:
         """
-        * Function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
+        * Function cyclically shifts the bytes in each row of the block by r bytes to the right, depending on the row number.
         """
         block = [
             block[0], block[5], block[10], block[15], 
@@ -267,7 +285,6 @@ class AES:
     def _mixColumns(self, block) -> list:
         """
         * Function consists of multiplying each column of the block with a constant matrix as follows:
-        TODO: Function work in progress
         """
         #? Input 4 bytes i.e newly formed after shiftRow 0, 1, 2, 3
         const = [
@@ -285,7 +302,9 @@ class AES:
                     start, to = each-4, each
                 if x % 4 == 0:
                     c = 0
-                mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
+                print(block[start:to], "<->", const[c:c+4], \
+                    "=", self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
+                # mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
                 c +=4
         return mixed
 
@@ -304,9 +323,8 @@ class AES:
         * Function start the reverse encryption process.
         """
         #? Starts with Final round of encryption
-        state = self._divideIntoBlocks(state)
+        state = self._divideIntoBlocks(state)[0]
         roundKeys = self._getRoundKeys(key)            
-        print(roundKeys)
 
         self._addRoundKey(roundKeys[self.Nr-1], state) #? For 128-bit key 
         self._invShiftRows(state)
@@ -320,19 +338,55 @@ class AES:
             self._invSubBytes(state)
 
         #? Finishes with First round of encryption
-        self._addRoundKey(roundKeys[0], state)   
+        self._addRoundKey(roundKeys[0], state)
+        plaintext = self._Reassemble([state])   
+        print(plaintext)
         return state
 
     def _invSubBytes(self, state):
-        pass
+        """
+        * Functions substitute bytes for ciphertext using invSBox, then returns new state
+        """
+        for s in range(len(state)):
+            state[s] = self._lookUpHex(state[s].split("0x")[1], True)
+        return state
 
     def _invShiftRows(self, state):
-        pass
+        """
+        * Function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
+        """
+        state = [
+            state[0], state[13], state[10], state[7], 
+            state[4], state[1], state[14], state[11],
+            state[8], state[5], state[2], state[15],
+            state[12], state[9], state[6], state[3]
+        ]
+        return state
 
     def _invMixColumns(self, state):
-        pass
+        """
+        * Function
+        """
+        const = [
+            0x0e, 0x0b, 0x0d, 0x09,
+            0x09, 0x0e, 0x0b, 0x0d,
+            0x0d, 0x09, 0x0e, 0x0b, 
+            0x0b, 0x0d, 0x09, 0x0e
+        ]
+        c = 0
+        mixed = []
+        for each in range(4, len(const)+1, 4):
+            start = to = None
+            for x in range(each-4, each):
+                for _ in range(each, each+1):
+                    start, to = each-4, each
+                if x % 4 == 0:
+                    c = 0
+                mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(state[start:to], const[c:c+4])]))
+                c +=4
+        return mixed    
 
-    #? Substitution table
+    #? Substitution Table
     _sBox = [
         [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76], 
         [0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0], 
@@ -352,6 +406,7 @@ class AES:
         [0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16]
     ]
 
+    #? Round Coefficients
     _RCON = [
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 
         0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 
@@ -371,6 +426,7 @@ class AES:
         0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d
     ]
 
+    #? Inverse Substitution Table
     _invSBox = [
         [0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb],
         [0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb],

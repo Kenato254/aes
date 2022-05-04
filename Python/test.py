@@ -1,3 +1,4 @@
+from cgi import test
 import unittest
 from aes import AES
 
@@ -33,22 +34,22 @@ class TestAES(unittest.TestCase):
         """
         ! Function tests proper working of cyclic permutation method
         """
-        permutated = self.test._rotWord(['0x6e', '0xc5', '0x45', '0xa5'])
-        self.assertListEqual(permutated, ['0xc5', '0x45', '0xa5', '0x6e'])
+        permutated = self.test._rotWord(["0x09", "0xcf", "0x4f", "0x3c"])
+        self.assertListEqual(permutated, ["0xcf", "0x4f", "0x3c", "0x09"])
 
     def test_subWord_method(self):
         """
         ! Function tests proper working of four-byte substitution using S-Box
         """
-        sBoxed = self.test._subWord(['0xc5', '0x45', '0xa5', '0x6e'])
-        self.assertListEqual(sBoxed, ['0xa6', '0x6e', '0x06', '0x9f'])
+        sBoxed = self.test._subWord(["0xcf", "0x4f", "0x3c", "0x09"])
+        self.assertListEqual(sBoxed, ["0x8a", "0x84", "0xeb", "0x01"])
     
     def test_rCon_method(self):
         """
         ! Function tests proper working round coeffecient operation
         """
-        rConed = self.test._rCon(["0x0c", "0x48", "0x99", "0x66"], 1)
-        self.assertListEqual(rConed, ["0x0d", "0x48", "0x99", "0x66"])
+        rConed = self.test._rCon(["0x8a", "0x84", "0xeb", "0x01"], 1)
+        self.assertListEqual(rConed, ["0x8b", "0x84", "0xeb", "0x01"])
 
     def test_lookUpHex_method(self):
         """
@@ -61,8 +62,8 @@ class TestAES(unittest.TestCase):
         """
         ! Function test proper working of XOR function
         """
-        results = self.test._aXorB(["0x6f", "0x70", "0x79", "0x72"],   ["0x21", "0x91", "0xea", "0xfc"])
-        self.assertListEqual(results, ["0x4e", "0xe1", "0x93", "0x8e"])
+        results = self.test._aXorB(["0x8b", "0x84", "0xeb", "0x01"],   ["0x2b", "0x7e", "0x15", "0x16"])
+        self.assertListEqual(results, ["0xa0", "0xfa", "0xfe", "0x17"])
     
     def test_subBytes_method(self):
         """
@@ -125,17 +126,21 @@ class TestAES(unittest.TestCase):
                 self.assertEqual(self.test._mixColumnsMult(d, c), r)
 
     def test_mixColumn_method(self):
+        """
+        ! Function tests proper mixColumns method functionality
+        """
         testData = [
-            '0x49', '0xdb', '0x87', '0x3b', 
-            '0x45', '0x39', '0x53', '0x89',
-            '0x7f', '0x02', '0xd2', '0xf1',
-            '0x77', '0xde', '0x96', '0x1a'
+            '0xd4', '0xbf', '0x5d', '0x30', 
+            '0xe0', '0xb4', '0x52', '0xae', 
+            '0xb8', '0x41', '0x11', '0xf1', 
+            '0x1e', '0x27', '0x98', '0xe5'
         ]
+
         resultList = [
-            '0x58', '0x4d', '0xca', '0xf1', 
-            '0x1b', '0x4b', '0x5a', '0xac',
-            '0xdb', '0xe7', '0xca', '0xa8',
-            '0x1b', '0x6b', '0xb0', '0xe5'
+            '0x04', '0x66', '0x81', '0xe5', 
+            '0xe0', '0xcb', '0x19', '0x9a',
+            '0x48', '0xf8', '0xd3', '0x7a',
+            '0x28', '0x06', '0x26', '0x4c'
         ]
         result = self.test._mixColumns(testData)
         self.assertListEqual(result, resultList)
