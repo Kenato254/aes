@@ -1,6 +1,5 @@
 import secrets
 import string
-from time import sleep
 
 class AES:
     def __init__(self, blocksize=128) -> None:
@@ -27,30 +26,23 @@ class AES:
 
         #? First round
         blocks = self._divideIntoBlocks(plaintext)
-        roundKeys = self._getRoundKeys(key) #? Key Expansion
+        #? Key Expansion        
+        roundKeys = self._getRoundKeys(key) 
         
-        # TODO:
-        # print(len(roundKeys))
-        # for e in roundKeys:
-        #     print(e)
-        # exit()
-
         #? Intermediate rounds
         for block in blocks:    
             self._addRoundKey(roundKeys[0], block)    
-            for each in range(self.Nr-2):
+
+            for each in range(1, self.Nr):
                 self._subBytes(block)
                 self._shiftRows(block)
-                # print(self._mixColumns(block))
                 self._mixColumns(block)
-                exit()
                 self._addRoundKey(roundKeys[each], block)
 
         #? Last round            
         self._subBytes(block)
         self._shiftRows(block)
-        self._mixColumns(block)
-        self._addRoundKey(roundKeys[self.Nr-1], block) #? For 128-bit key 
+        self._addRoundKey(roundKeys[self.Nr], block) 
 
         ciphertext = self._Reassemble(blocks)
         return ciphertext
@@ -129,7 +121,7 @@ class AES:
         else:    
             temp = None
             i = 0
-            while i < self.Nk:
+            while i < self.Nk+1:
                 #? First subkey division. Comprising of four words of hexdecimal string
                 word[i] = [hex(ord(key[4*i])), hex(ord(key[4*i+1])), \
                             hex(ord(key[4*i+2])), hex(ord(key[4*i+3]))]
@@ -148,7 +140,7 @@ class AES:
 
             word.append(self._aXorB(word[i-self.Nk], temp))
             i +=1
-
+        
         #? Reassemble Word to keys
         word = self._reassembleWord(word)
         return word
@@ -163,7 +155,7 @@ class AES:
             if len(temp2) == 16:
                 temp.append(temp2)
                 temp2 = []
-        word = temp[0:-1]
+        word = temp[0:]
         del temp, temp2
         return word
         
@@ -233,7 +225,6 @@ class AES:
             if len(result) != 4:
                 result = self._patchHex(result)
             block[k] = result
-        # print(block) #!!!!!!!!!!!!!!! TODO:
         return block
 
     def _subBytes(self, block) -> list:
@@ -248,13 +239,12 @@ class AES:
         """
         * Function cyclically shifts the bytes in each row of the block by r bytes to the right, depending on the row number.
         """
-        block = [
+        temp = [
             block[0], block[5], block[10], block[15], 
             block[4], block[9], block[14], block[3],
             block[8], block[13], block[2], block[7],
             block[12], block[1], block[6], block[11]
-        ]
-        return block
+        ]        return self.__getBlocks(block, temp)
     
     def _mixColumnsAdd(self, subarray):
         """
@@ -302,11 +292,16 @@ class AES:
                     start, to = each-4, each
                 if x % 4 == 0:
                     c = 0
-                print(block[start:to], "<->", const[c:c+4], \
-                    "=", self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
-                # mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
+                mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(block[start:to], const[c:c+4])]))
                 c +=4
-        return mixed
+        return self.__getBlocks(block, mixed)
+
+    def __getBlocks(self, block, temp):
+        """ Function copies the given array of blocks into the given block"""
+        for each in range(len(temp)):
+            block[each] =  self._patchHex(temp[each]) if len(temp[each]) != 4 else temp[each]
+        del temp
+        return block
 
     def _Reassemble(self, block) -> str:
         """ 
@@ -326,13 +321,17 @@ class AES:
         state = self._divideIntoBlocks(state)[0]
         roundKeys = self._getRoundKeys(key)            
 
-        self._addRoundKey(roundKeys[self.Nr-1], state) #? For 128-bit key 
+        self._addRoundKey(roundKeys[self.Nr], state) #? For 128-bit key 
         self._invShiftRows(state)
         self._invSubBytes(state)
 
         #? Intermediate rounds
-        for each in range(self.Nr-2, 0, -1):
+        for each in range(self.Nr-1, 0, -1):
             self._addRoundKey(roundKeys[each], state)
+
+            # TODO: print(state) 
+            # exit()
+
             self._invMixColumns(state)
             self._invShiftRows(state)
             self._invSubBytes(state)
@@ -355,13 +354,13 @@ class AES:
         """
         * Function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
         """
-        state = [
+        temp = [
             state[0], state[13], state[10], state[7], 
             state[4], state[1], state[14], state[11],
             state[8], state[5], state[2], state[15],
             state[12], state[9], state[6], state[3]
         ]
-        return state
+        return self.__getBlocks(state, temp)
 
     def _invMixColumns(self, state):
         """
@@ -384,7 +383,7 @@ class AES:
                     c = 0
                 mixed.append(self._mixColumnsAdd([self._mixColumnsMult(x, y) for x, y in zip(state[start:to], const[c:c+4])]))
                 c +=4
-        return mixed    
+        return self.__getBlocks(state, mixed)
 
     #? Substitution Table
     _sBox = [

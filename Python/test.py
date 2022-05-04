@@ -7,10 +7,10 @@ class TestAES(unittest.TestCase):
         self.test = AES()
         return super().setUp()
     
-    # def test_encrypt_method(self):
-    #     """Test AES encryption method """
-    #     cipher = self.test.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f")
-    #     self.assertEqual(cipher, "69c4e0d86a7b0430d8cdb78070b4c55a")
+    def test_encrypt_method(self):
+        """Test AES encryption method """
+        cipher = self.test.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f")
+        self.assertEqual(cipher, "69c4e0d86a7b0430d8cdb78070b4c55a")
 
     def test_divideIntoBlocks_method(self):
         """
