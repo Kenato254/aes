@@ -49,3 +49,5 @@
 
 3. **RCon**
 	- The **RCon** Function runs a given word through a XOR operation against a round constant (Round Coefficient).
+
+

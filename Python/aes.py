@@ -396,41 +396,6 @@ class AES:
                 c +=4
         return self.__getBlocks(state, mixed)
 
-    # def InvMixColumns(self, state):
-    #     arr = 4*[0]
-    #     for x in range(4):  
-
-    #         for y in range(4):  
-    #             arr[y] = state[x+y*4];  
-    
-    #         state[x] = hex(self.__mul(0x0e, arr[0]) ^ self.__mul(0x0b, arr[1]) ^ self.__mul(0x0d, arr[2]) ^ self.__mul(0x09, arr[3]))  
-    #         state[x+4] = hex(self.__mul(0x09, arr[0]) ^ self.__mul(0x0e, arr[1]) ^ self.__mul(0x0b, arr[2]) ^ self.__mul(0x0d, arr[3]))  
-    #         state[x+8] = hex(self.__mul(0x0d, arr[0]) ^ self.__mul(0x09, arr[1]) ^ self.__mul(0x0e, arr[2]) ^ self.__mul(0x0b, arr[3]))  
-    #         state[x+12] = hex(self.__mul(0x0b, arr[0]) ^ self.__mul(0x0d, arr[1]) ^ self.__mul(0x09, arr[2]) ^ self.__mul(0x0e, arr[3]))  
-    #     print(state)
-
-    def mixColumnsInverse(self, state):
-        '''
-        a mixing operation which operates on the columns of the state, combining the
-        four bytes in each column.
-        Source: https://en.wikipedia.org/wiki/Rijndael_mix_columns
-        '''
-        for i in [0,1,2,3]:
-            t = c = [0,0,0,0]
-            for j in [0,1,2,3]:
-                c[j] = int(state[j*4+i], 16)
-            t[0] = self._mult14[c[0]] ^ self._mult11[c[1]] ^ self._mult13[c[2]] ^ self._mult9[c[3]]
-            t[1] = self._mult9[c[0]] ^ self._mult14[c[1]] ^ self._mult11[c[2]] ^ self._mult13[c[3]]
-            t[2] = self._mult13[c[0]] ^ self._mult9[c[1]] ^ self._mult14[c[2]] ^ self._mult11[c[3]]
-            t[3] = self._mult11[c[0]] ^ self._mult13[c[1]] ^ self._mult9[c[2]] ^ self._mult14[c[3]]
-
-            for j in [0,1,2,3]:
-                # print(state[j*4+i], hex(t[j]))
-                # exit(0)
-                state[j*4+i] = hex(t[j])
-            # exit()
-        return state
-
     #? Substitution Table
     _sBox = [
         [0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76], 
