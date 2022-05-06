@@ -144,6 +144,27 @@ class TestAES(unittest.TestCase):
         ]
         result = self.test._mixColumns(testData)
         self.assertListEqual(result, resultList)
+    
+    def test_invMixColumn_method(self):
+        """
+        !
+        """
+        before = [
+            "0xbd", "0x6e", "0x7c", "0x3d", 
+            "0xf2", "0xb5", "0x77", "0x9e", 
+            "0x0b", "0x61", "0x21", "0x6e", 
+            "0x8b", "0x10", "0xb6", "0x89",
+        ]
+
+        after = [
+            "0x47", "0x73", "0xb9", "0x1f", 
+            "0xf7", "0x2f", "0x35", "0x43", 
+            "0x61", "0xcb", "0x01", "0x8e", 
+            "0xa1", "0xe6", "0xcf", "0x2c",
+        ]
+
+        result = self.test._invMixColumns(before)
+        self.assertListEqual(result, after)
 
     def tearDown(self) -> None:
         self.test

@@ -1,11 +1,11 @@
-# “Cryptographic algorithm implementation: AES cipher”
+### “Cryptographic algorithm implementation: AES cipher”
 -	**The purpose of the practical task:** is to try to implement one of the cryptographic algorithms - **AES cipher**
 -	The AES encryption algorithm defines multiple transformations that are performed on the data stored in an array. 
 
 ## AES Scheme
 ![[Pasted image 20220421144723.png]]
 
-## Operations
+## Main Functions
 1.	**DivideIntoBlocks**
 		- The **DivideIntoBlocks** functons must perform the division of the input text into blocks of 128bit (16 bytes).
 		- 
@@ -26,11 +26,26 @@
 4.	**SubBytes**
 		- The **SubBytes** function is needed to perform the substitution : each byte in the block is replaced by the corresponding element from the fixed table 
 		- (**S-box**).
-		 ![[Pasted image 20220421152941.png]]
+
+		![[Pasted image 20220421152941.png]]
 		- 
 		![[Pasted image 20220421152229.png]]
 
-5.	**MixColumns**
+5.	**ShiftRows** 
+		- The ShiftRows function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
+		![[Pasted image.png]]
+
+6.	**MixColumns**
 		- The **MixColumns** function consists of multiplying each column of the block with a constant matrix as follows:
 		- 
 		![[Pasted image 20220421153235.png]]
+
+## Helper Functions
+1. **SubWord**
+	- The **SubWord** Function used in the Key Expansion routine that takes a four-byte input word and applies an S-box to each of the four bytes to produce an output word.
+
+2. **RotWord**
+	- The **RotWord** Function used in the Key Expansion routine that takes a four-byte word and performs a cyclic permutation. 
+
+3. **RCon**
+	- The **RCon** Function runs a given word through a XOR operation against a round constant (Round Coefficient).
