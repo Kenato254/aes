@@ -4,13 +4,20 @@ from aes import AES
 
 class TestAES(unittest.TestCase):
     def setUp(self) -> None:
-        self.test = AES()
+        self.test = AES() #* 128 bit Standard
+        self.test192 = AES(192) #* 192 bit Standard
+        self.test256 = AES(256) #* 256 bit Standard
         return super().setUp()
     
     def test_encrypt_method(self):
         """Test AES encryption method """
         cipher = self.test.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f")
+        cipher192 = self.test192.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f1011121314151617")
+        cipher256 = self.test256.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+        
         self.assertEqual(cipher, "69c4e0d86a7b0430d8cdb78070b4c55a")
+        self.assertEqual(cipher192, "dda97ca4864cdfe06eaf70a0ec0d7191")
+        self.assertEqual(cipher256, "8ea2b7ca516745bfeafc49904b496089")
 
     def test_divideIntoBlocks_method(self):
         """
