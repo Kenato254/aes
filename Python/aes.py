@@ -316,6 +316,7 @@ class AES:
     def decrypt(self, state, key):
         """
         * Function start the reverse encryption process.
+        TODO: This function is incomplete. As of now Inverse Mixcolumn is not functioning properly!!
         """
         #? Starts with Final round of encryption
         state = self._divideIntoBlocks(state)[0]
@@ -376,6 +377,7 @@ class AES:
     def _invMixColumns(self, state):
         """
         * Function
+        TODO: Function has a bug
         """ 
         const = [
             0x0e, 0x0b, 0x0d, 0x09,
