@@ -10,7 +10,7 @@
 		- The **DivideIntoBlocks** functons must perform the division of the input text into blocks of 128bit (16 bytes).
 		- 
 		- Each block is respresented as a 4x4 matrix
-		 ![[Pasted image 20220421145718.png]]
+		 ![[Pasted Images/20220421145718.png]]
 		
 2.	**GetRoundKeys**
 		- The **GetRoundKeys** functions performs key deployment. Since AES implies the use of a 128-bit key, this means that for data of greater length, a key sequence must be generated that is equal to the length of the encrypted message.
@@ -21,19 +21,19 @@
 3.	**AddRoundKey**
 		- The **AddRoundKey** function adds a block to the **RoundKey** key (**XOR operation (**⊕**)**)
 		- 
-		![[Pasted image 20220421150634.png]]
+		![[Pasted Images/20220421150634.png]]
 
 4.	**SubBytes**
 		- The **SubBytes** function is needed to perform the substitution : each byte in the block is replaced by the corresponding element from the fixed table 
 		- (**S-box**).
 
-		![[Pasted image 20220421152941.png]]
+		![[Pasted Images/20220421152941.png]]
 		- 
-		![[Pasted image 20220421152229.png]]
+		![[Pasted Images/20220421152229.png]]
 
 5.	**ShiftRows** 
 		- The ShiftRows function cyclically shifts the bytes in each row of the block by r bytes to the left, depending on the row number.
-		![[Pasted image.png]]
+		![[Pasted ./Images/image.jpg]]
 
 6.	**MixColumns**
 		- The **MixColumns** function consists of multiplying each column of the block with a constant matrix as follows:
