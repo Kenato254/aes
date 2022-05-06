@@ -1,4 +1,3 @@
-from cgi import test
 import unittest
 from aes import AES
 
@@ -154,7 +153,7 @@ class TestAES(unittest.TestCase):
     
     # def test_invMixColumn_method(self):
     #     """
-    #     !
+    #     ! Function work on progress
     #     """
     #     before = [
     #         "0xbd", "0x6e", "0x7c", "0x3d", 
