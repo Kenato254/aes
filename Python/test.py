@@ -10,13 +10,33 @@ class TestAES(unittest.TestCase):
     
     def test_encrypt_method(self):
         """Test AES encryption method """
-        cipher = self.test.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f")
-        cipher192 = self.test192.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f1011121314151617")
-        cipher256 = self.test256.encrypt("00112233445566778899aabbccddeeff", "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+        cipher = self.test.encrypt("00112233445566778899aabbccddeeff", \
+                                    "000102030405060708090a0b0c0d0e0f")
+
+        cipher192 = self.test192.encrypt("00112233445566778899aabbccddeeff", \
+                                         "000102030405060708090a0b0c0d0e0f1011121314151617")
+        cipher256 = self.test256.encrypt("00112233445566778899aabbccddeeff", \
+                                         "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
         
         self.assertEqual(cipher, "69c4e0d86a7b0430d8cdb78070b4c55a")
         self.assertEqual(cipher192, "dda97ca4864cdfe06eaf70a0ec0d7191")
         self.assertEqual(cipher256, "8ea2b7ca516745bfeafc49904b496089")
+    
+    def test_decrypt_method(self):
+        """
+        ! Function test proper working of  AES._decrypt method
+        """
+        #? Testing 128 bit key
+        plaintext128 = self.test.decrypt("69c4e0d86a7b0430d8cdb78070b4c55a", \
+                                         "000102030405060708090a0b0c0d0e0f")
+        plaintext192 = self.test192.decrypt("dda97ca4864cdfe06eaf70a0ec0d7191", \
+                                         "000102030405060708090a0b0c0d0e0f1011121314151617")
+        plaintext256 = self.test256.decrypt("8ea2b7ca516745bfeafc49904b496089", \
+                                         "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")
+
+        self.assertEqual(plaintext128, "00112233445566778899aabbccddeeff")
+        self.assertEqual(plaintext192, "00112233445566778899aabbccddeeff")
+        self.assertEqual(plaintext256, "00112233445566778899aabbccddeeff")
 
     def test_divideIntoBlocks_method(self):
         """
@@ -151,26 +171,26 @@ class TestAES(unittest.TestCase):
         result = self.test._mixColumns(testData)
         self.assertListEqual(result, resultList)
     
-    # def test_invMixColumn_method(self):
-    #     """
-    #     ! Function work on progress
-    #     """
-    #     before = [
-    #         "0xbd", "0x6e", "0x7c", "0x3d", 
-    #         "0xf2", "0xb5", "0x77", "0x9e", 
-    #         "0x0b", "0x61", "0x21", "0x6e", 
-    #         "0x8b", "0x10", "0xb6", "0x89",
-    #     ]
+    def test_invMixColumn_method(self):
+        """
+        ! Function work on progress
+        """
+        before = [
+            "0xbd", "0x6e", "0x7c", "0x3d", 
+            "0xf2", "0xb5", "0x77", "0x9e", 
+            "0x0b", "0x61", "0x21", "0x6e", 
+            "0x8b", "0x10", "0xb6", "0x89",
+        ]
 
-    #     after = [
-    #         "0x47", "0x73", "0xb9", "0x1f", 
-    #         "0xf7", "0x2f", "0x35", "0x43", 
-    #         "0x61", "0xcb", "0x01", "0x8e", 
-    #         "0xa1", "0xe6", "0xcf", "0x2c",
-    #     ]
+        after = [
+            "0x47", "0x73", "0xb9", "0x1f", 
+            "0xf7", "0x2f", "0x35", "0x43", 
+            "0x61", "0xcb", "0x01", "0x8e", 
+            "0xa1", "0xe6", "0xcf", "0x2c",
+        ]
 
-    #     result = self.test._invMixColumns(before)
-    #     self.assertListEqual(result, after)
+        result = self.test._invMixColumns(before)
+        self.assertListEqual(result, after)
 
     def tearDown(self) -> None:
         self.test
