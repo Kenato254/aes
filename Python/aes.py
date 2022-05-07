@@ -332,9 +332,9 @@ class AES:
             self._invShiftRows(state)
             self._invSubBytes(state)
 
-        self._addRoundKey(roundKeys[0], state)  
-
         #? Finishes with First round of encryption
+        self._addRoundKey(roundKeys[0], state)  
+        
         plaintext = self._Reassemble([state])   
         print(plaintext)
         return plaintext
