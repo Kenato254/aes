@@ -178,9 +178,7 @@ class AES:
         temp = []
         for item1, item2 in zip(list1, list2):
             result = hex(int(item2, 16) ^ int(item1, 16))
-            if len(result) != 4:
-                result = self._patchHex(result)
-            temp.append(result)
+            temp.append(self._patchHex(result) if len(result) != 4 else result)
         return temp
     
     def _patchHex(self, hexString) -> str:
