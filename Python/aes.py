@@ -169,9 +169,7 @@ class AES:
         else: #? SBox lookup for forward encryption   
             hexString = hex(self._sBox[int("0x"+hexString[0], 16)][int("0x"+hexString[1], 16)])
         
-        if len(hexString) != 4:
-            hexString = self._patchHex(hexString)
-        return hexString
+        return self._patchHex(hexString) if len(hexString) != 4 else hexString
 
     def _aXorB(self, list1, list2) -> list:
         """
@@ -198,9 +196,7 @@ class AES:
         """
         for k, v in enumerate(block):
             result = hex(int(v, 16) ^ int(key[k], 16))
-            if len(result) != 4:
-                result = self._patchHex(result)
-            block[k] = result
+            block[k] = self._patchHex(result) if len(result) != 4 else result
         return block
 
     def _subBytes(self, block) -> list:
