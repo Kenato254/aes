@@ -1,6 +1,3 @@
-import secrets
-import string
-
 class AES:
     def __init__(self, blocksize=128) -> None:
         """
@@ -21,7 +18,7 @@ class AES:
         #? Cast input to str and checks key's length
         assert len(key) in (16, 24, 32, 48, 64), "Warning: Invalid key length."
 
-        key = str(key) if type(key) == int else key #
+        key = str(key) if type(key) == int else key 
         plaintext = str(plaintext) if type(plaintext) == int else plaintext 
 
         #? First round
@@ -49,52 +46,32 @@ class AES:
     
     def _divideIntoBlocks(self, plaintext) -> list:
         """ 
-        * Functons must perform the division of the input text into blocks of 128bit (16 bytes)
-        * This function operates on three cases; Case 1: PLaintext in hex value Case 2: Plaintext < 16 bytes Case 3: Plaintext > 16 bytes
+        * Function performs the division of the input text into blocks of 128bit (16 bytes)
+        * This function operates on three cases; Case 1: PLaintext in hex value Case 2: Plaintext in ascii characters
         """
         #? Divide plaintext into block of 4 by 4 bytes or 128 bits.  
         blocks, length = [], len(plaintext) 
 
-        if len(plaintext) == 32: #? For hex string inputs
+        #? Case 1: For input that is already in hex string format
+        if length == 32:
             temp = []
             for char in range(0, length, 2):
                 temp.append(str("0x"+plaintext[char:char+2]))
             blocks.append(temp)
 
-        else: #? For any other character inputs
-            innerBlocks = length // 16
+        #? Case 2: For ascii characters input
+        else: 
             padding = 16 - length if length < 16 else length % 16
 
-            #? Case 1
-            if innerBlocks < 1:
-                #? Padding plaintext to achieve 16 characters string
-                plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
-                            for i in range(padding))
+            #? Case 2: Input string that need padding
+            if length < 16:
+                #? ZeroLength Method
+                plaintext += "0" * padding 
 
-                temp = []
-                for char in plaintext:
-                    temp.append(hex(ord(char))) #? Hexdecimals
-                blocks.append(temp)
-                return blocks
-            
-            #? Case 2
-            if padding > 0:
-                # plaintext += " " * padding #? Padding plaintext to achieve 16 characters string
-                #? Padding plaintext to achieve 16 characters string
-                plaintext += ''.join(secrets.choice(string.ascii_lowercase + string.digits + string.ascii_uppercase)\
-                            for i in range(padding))
-                innerBlocks = len(plaintext) // 16  
-            
-            index = 0
-            while innerBlocks:
-                temp = []
-                for char in plaintext[index:index+16]:
-                    temp.append(hex(ord(char))) #? Hexdecimals
-
-                if len(temp) > 0:
-                    blocks.append(temp)
-                    index += 16
-                    innerBlocks -=1
+            temp = []
+            for char in plaintext:
+                temp.append(hex(ord(char))) #? Hexdecimals
+            blocks.append(temp)            
         return blocks
     
     def _getRoundKeys(self, key) -> list:
@@ -336,8 +313,18 @@ class AES:
         self._addRoundKey(roundKeys[0], state)  
         
         plaintext = self._Reassemble([state])   
+        # self.__hexToAscii(state)
         print(plaintext)
-        return plaintext
+        return state
+    
+    def __hexToAscii(self, hexString) -> None:
+        """
+        * Function convert hex string to ascii characters
+        """
+        plaintext = ""
+        for each in hexString:
+            plaintext += chr(int(each, 16))
+        print(plaintext.strip("0"))
 
     def _invSubBytes(self, state):
         """
