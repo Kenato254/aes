@@ -50,12 +50,6 @@ class TestAES(unittest.TestCase):
         blocks2 = self.test._divideIntoBlocks("Hello world!!!!!")
         self.assertEqual(len(blocks2[0]), 16)
 
-        #! Testing a plaintext that has length greater than 16 but needs padding
-        plaintext = "Function consists of multiplying each column of the block with a constant matrix as follow"
-        blocks3 = self.test._divideIntoBlocks(plaintext)
-        for block in blocks3:
-            self.assertEqual(len(block), 16)
-
     def test_rotWord_method(self):
         """
         ! Function tests proper working of cyclic permutation method

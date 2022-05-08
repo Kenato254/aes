@@ -71,7 +71,7 @@ class AES:
             temp = []
             for char in plaintext:
                 temp.append(hex(ord(char))) #? Hexdecimals
-            blocks.append(temp)            
+            blocks.append(temp)
         return blocks
     
     def _getRoundKeys(self, key) -> list:
@@ -315,7 +315,7 @@ class AES:
         plaintext = self._Reassemble([state])   
         # self.__hexToAscii(state)
         print(plaintext)
-        return state
+        return plaintext
     
     def __hexToAscii(self, hexString) -> None:
         """
