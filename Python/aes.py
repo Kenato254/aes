@@ -47,7 +47,7 @@ class AES:
     def _divideIntoBlocks(self, plaintext) -> list:
         """ 
         * Function performs the division of the input text into blocks of 128bit (16 bytes)
-        * This function operates on three cases; Case 1: PLaintext in hex value Case 2: Plaintext in ascii characters
+        * This function operates on two cases; Case 1: PLaintext in hex value Case 2: Plaintext in ascii characters
         """
         #? Divide plaintext into block of 4 by 4 bytes or 128 bits.  
         blocks, length = [], len(plaintext) 
@@ -68,10 +68,10 @@ class AES:
                 #? ZeroLength Method
                 plaintext += "0" * padding 
 
-            temp = []
-            for char in plaintext:
-                temp.append(hex(ord(char))) #? Hexdecimals
-            blocks.append(temp)
+                temp = []
+                for char in plaintext:
+                    temp.append(hex(ord(char))) #? Hexdecimals
+                blocks.append(temp)
         return blocks
     
     def _getRoundKeys(self, key) -> list:
@@ -95,7 +95,6 @@ class AES:
         
         #? Divide key of ascii characters into four words of 4 bytes length and cast into hex string consequently
         else:    
-            temp = None
             i = 0
             while i < self.Nk:
                 #? First subkey division. Comprising of four words of hexdecimal string
@@ -307,8 +306,8 @@ class AES:
         self._addRoundKey(roundKeys[0], state)  
         
         plaintext = self._Reassemble([state])   
-        # self.__hexToAscii(state)
-        print(plaintext)
+        # print(f"Plaintext:  {self.__hexToAscii(state)}")
+        print(f"Plaintext:  {plaintext}")
         return plaintext
     
     def __hexToAscii(self, hexString) -> None:
@@ -318,7 +317,7 @@ class AES:
         plaintext = ""
         for each in hexString:
             plaintext += chr(int(each, 16))
-        print(plaintext.strip("0"))
+        return plaintext.strip("0")
 
     def _invSubBytes(self, state):
         """
