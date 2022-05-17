@@ -50,7 +50,7 @@ class TestAES(unittest.TestCase):
         blocks = self.test._divideIntoBlocks("Hello")
         self.assertEqual(len(blocks[0]), 16)
 
-        #? Testing plainteext that doesn't need padding
+        #? Testing plaintext that doesn't need padding
         blocks2 = self.test._divideIntoBlocks("Hello world!!!!!")
         self.assertEqual(len(blocks2[0]), 16)
 
