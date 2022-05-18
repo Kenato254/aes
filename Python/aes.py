@@ -21,15 +21,15 @@ class AES:
         key = str(key) if type(key) == int else key 
         plaintext = str(plaintext) if type(plaintext) == int else plaintext 
 
-        #? First round
         blocks = self._divideIntoBlocks(plaintext)
         #? Key Expansion        
         roundKeys = self._getRoundKeys(key) 
         
-        #? Intermediate rounds
+        #? First round
         for block in blocks:    
             self._addRoundKey(roundKeys[0], block)    
 
+            #? Intermediate rounds
             for each in range(1, self.Nr):
                 self._subBytes(block)
                 self._shiftRows(block)
@@ -280,9 +280,9 @@ class AES:
         * Function performs the ciphertext concatenation from blocks of 128bit (16 bytes)
         """
         ciphertext = ""
-        for each in block:
-            for char in each:
-                ciphertext += "".join(char.split('0x'))
+        for each in range(len(block)):
+            for char in range(len(block[each])):
+                ciphertext += "".join(block[each][char].split('0x'))
         return ciphertext
 
     def decrypt(self, state, key):
@@ -317,8 +317,8 @@ class AES:
         * Function convert hex string to ascii characters
         """
         plaintext = ""
-        for each in hexString:
-            plaintext += chr(int(each, 16))
+        for each in range(len(hexString)):
+            plaintext += chr(int(hexString[each], 16))
         return plaintext.strip("0")
 
     def _invSubBytes(self, state):
