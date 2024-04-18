@@ -173,8 +173,6 @@ class AES:
         """
         * Function maps given hex string to its substitute value on S-Box and then returns it hex string value
         """
-        # print(hex(self._sBox[int("0x"+hexString, 16)]))
-        # exit(0)
         if inv: #? SBox lookup for Inverse cipher
             hexString = hex(self._invSBox[int("0x"+hexString, 16)])
         else: #? SBox lookup for forward encryption   
